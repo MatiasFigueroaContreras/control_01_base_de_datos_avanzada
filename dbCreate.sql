@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS colegiosdb.public.plantilla_curso (
 CREATE TABLE IF NOT EXISTS colegiosdb.public.apoderado (
     id_apoderado SERIAL NOT NULL,
     id_comuna int,
+    nombre VARCHAR(50),
     parentezco varchar(50),
     sexo varchar(50),
     edad int,
