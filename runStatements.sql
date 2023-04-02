@@ -34,3 +34,19 @@ FROM alu_curso ac, asistencia asi, curso cu
 WHERE asi.id_asistencia = ac.id_asistencia and cu.id_curso = ac.id_curso
 GROUP BY cu.nombre, asi.anio
 ORDER BY cantidad_alumnos asc;
+
+
+--Query 8
+-- listado alumnos por curso donde el apoderado no es su padre o madre
+SELECT a.nombre, cu.nombre as curso
+FROM alumno a, apoderado ap, alu_curso ac, curso cu
+WHERE a.id_alumno = ac.id_alumno and ap.id_apoderado = a.id_apoderado and ac.id_curso = cu.id_curso and ap.parentezco != 'padre' and ap.parentezco != 'madre';
+
+
+--Query 9
+-- colegio con mayor promedio de asistencia el año 2019, identificando la comuna
+SELECT co.nombre as colegio, c.nombre as comuna, AVG(asi.cantidad) as promedio_asistencia
+FROM colegio co, comuna c, asistencia asi, alu_curso ac, alumno a
+WHERE co.id_comuna = c.id_comuna and a.id_colegio = co.id_colegio   and ac.id_alumno = a.id_alumno and asi.anio = 2019 and asi.id_alu_curso = ac.id_alu_curso
+GROUP BY co.nombre, c.nombre
+ORDER BY promedio_asistencia desc;
