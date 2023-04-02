@@ -80,7 +80,8 @@ SELECT co.nombre as colegio, c.nombre as comuna, AVG(asi.cantidad) as promedio_a
 FROM colegio co, comuna c, asistencia asi, alu_curso ac
 WHERE co.id_comuna = c.id_comuna and ac.id_colegio = co.id_colegio  and asi.anio = 2019 and asi.id_alu_curso = ac.id_alu_curso
 GROUP BY co.nombre, c.nombre
-ORDER BY promedio_asistencia desc;
+ORDER BY promedio_asistencia desc
+LIMIT 1;
 
 
 --Query 10
