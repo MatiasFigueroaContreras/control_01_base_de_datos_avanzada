@@ -95,7 +95,8 @@ VALUES ('1ero Basico'),
 
 --
 WITH rol_list as
-        (SELECT '{profesor, auxiliar, secretario, coordinador}'::VARCHAR(50)[] rol),
+        (SELECT '{profesor, auxiliar, secretario, coordinador,profesor,profesor}'::VARCHAR(50)[] rol),
+
      colegio_list as
         (SELECT c.id_colegio,
                 ROW_NUMBER() OVER (
@@ -103,11 +104,15 @@ WITH rol_list as
          FROM colegio c
          ORDER BY random()
          LIMIT 150),
+
      sexo_list as
         (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo),
+
      series as
         (SELECT generate_series(1, 10) as n,
-                MOD(cast(trunc(random()*4) as int), 4) + 1 as random)
+                MOD(cast(trunc(random()*6) as int), 6) + 1 as random)
+
+
 INSERT INTO public.empleado (id_colegio, nombre, rol, sexo)
 SELECT cl.id_colegio,
        'Empleado ' || cl.row_number || cl.id_colegio as name,

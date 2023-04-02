@@ -29,11 +29,18 @@ ORDER BY c.nombre desc, s.cantidad;
 
 --Query 4
 --Lista de cursos que cuentan con la menor cantidad de alumnos y el año en que se dicta.
-SELECT cu.nombre as nombre_curso, COUNT(*) as cantidad_alumnos, asi.anio
-FROM alu_curso ac, asistencia asi, curso cu
-WHERE asi.id_asistencia = ac.id_asistencia and cu.id_curso = ac.id_curso
-GROUP BY cu.nombre, asi.anio
-ORDER BY cantidad_alumnos asc;
+SELECT t2.anio, min(t2.cantidad_alumnos), min(t2.nombre_curso)
+FROM(SELECT DISTINCT ON (t1.cantidad_alumnos)
+		t1.anio, t1.cantidad_alumnos, t1.nombre_curso
+		FROM (SELECT cu.nombre as nombre_curso, COUNT(*) as cantidad_alumnos, asi.anio
+				FROM alu_curso ac, asistencia asi, curso cu
+				WHERE asi.id_alu_curso = ac.id_alu_curso and cu.id_curso = ac.id_curso
+				GROUP BY asi.anio, cu.nombre
+				ORDER BY cantidad_alumnos asc) as t1
+		GROUP by t1.anio, t1.cantidad_alumnos, t1.nombre_curso
+		ORDER by t1.cantidad_alumnos) as t2
+GROUP BY t2.anio
+ORDER BY t2.anio;
 
 
 --Query 8
