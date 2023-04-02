@@ -32,6 +32,7 @@ WITH parentezco_list as
      series as
     (SELECT generate_series(1, 100) as n,
             MOD(cast(trunc(random()*6) as int), 6) + 1 as random)
+
 INSERT INTO public.apoderado (id_comuna, nombre, parentezco, sexo, edad)
 SELECT trunc((random()*19) + 1),
        'Apoderado ' || series.n as name,
@@ -55,6 +56,7 @@ WITH apoderado_colegio_list as
      LIMIT 150),
      sexo_list as
     (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo)
+
 INSERT INTO public.alumno (id_apoderado, id_comuna, id_colegio, edad, sexo, nombre)
 SELECT acl.id_apoderado,
        acl.id_comuna,
@@ -80,3 +82,36 @@ VALUES ('Lenguaje'),
        ('Musica'), 
        ('Artes'),
        ('Filosofia');
+
+
+WITH rol_list as 
+    (SELECT '{profesor, auxiliar, secretario, coordinador}'::VARCHAR(50)[] rol),
+    colegio_list as 
+    (SELECT c.id_colegio,
+            ROW_NUMBER() OVER (
+                               ORDER BY random()) as row_number
+     FROM colegio c
+     ORDER BY random()
+     LIMIT 150),
+    sexo_list as
+    (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo),
+    series as
+    (SELECT generate_series(1, 10) as n,
+            MOD(cast(trunc(random()*4) as int), 4) + 1 as random)
+     
+INSERT INTO public.empleado (id_colegio, nombre, rol, sexo)
+SELECT cl.id_colegio,
+       'Empleado ' || cl.row_number || cl.id_colegio as name,
+       rol[series.random],
+       sexo[MOD(cast(trunc(random()*2) as int), 2) + 1]
+FROM   rol_list,
+        colegio_list cl,
+        sexo_list,
+        series;
+
+
+
+INSERT INTO public.sueldo (id_empleado, cantidad)
+SELECT e.id_empleado,
+       cast(trunc(random()*600000 + 500000) as int)
+FROM empleado e;
