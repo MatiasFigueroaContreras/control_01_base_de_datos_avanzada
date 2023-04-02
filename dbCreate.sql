@@ -1,6 +1,6 @@
--- Crear database
 DROP DATABASE IF EXISTS colegiosdb;
 
+-- Crear database
 CREATE DATABASE colegiosdb
 	WITH 
 	OWNER = postgres 
@@ -16,7 +16,7 @@ COMMENT ON DATABASE colegiosdb
 
 --- Escribir el siguiente comando en el SQL Shell, 
 ---  para utilizar la base de datos creada
---- \c colegiosdb
+---  \c colegiosdb
 
 -- Tablas de la base de datos 
 -- se ponen en el query 
@@ -75,25 +75,24 @@ CREATE TABLE IF NOT EXISTS colegiosdb.public.alumno (
     FOREIGN KEY (id_colegio) REFERENCES colegiosdb.public.colegio(id_colegio)
 );
 
+CREATE TABLE IF NOT EXISTS colegiosdb.public.alu_curso (
+    id_alu_curso SERIAL NOT NULL,
+    id_alumno int,
+    id_curso int,
+    PRIMARY KEY (id_alu_curso),
+    CONSTRAINT fk_alu_curso_alumno FOREIGN KEY (id_alumno) REFERENCES colegiosdb.public.alumno(id_alumno),
+    CONSTRAINT fk_alu_curso_curso FOREIGN KEY (id_curso) REFERENCES colegiosdb.public.curso(id_curso)
+);
+
 CREATE TABLE IF NOT EXISTS colegiosdb.public.asistencia (
     id_asistencia SERIAL NOT NULL,
     cantidad int,
     mes int,
     anio int,
-    id_alumno int,
+    max_asistencia int,
+    id_alu_curso int,
     PRIMARY KEY (id_asistencia),
-    CONSTRAINT fk_alu_curso_alumno FOREIGN KEY (id_alumno) REFERENCES colegiosdb.public.alumno(id_alumno)
-);
-
-CREATE TABLE IF NOT EXISTS colegiosdb.public.alu_curso (
-    id_alu_curso SERIAL NOT NULL,
-    id_alumno int,
-    id_curso int,
-    id_asistencia int,
-    PRIMARY KEY (id_alu_curso),
-    CONSTRAINT fk_alu_curso_alumno FOREIGN KEY (id_alumno) REFERENCES colegiosdb.public.alumno(id_alumno),
-    CONSTRAINT fk_alu_curso_curso FOREIGN KEY (id_curso) REFERENCES colegiosdb.public.curso(id_curso),
-    CONSTRAINT fk_alu_curso_asistencia FOREIGN KEY (id_asistencia) REFERENCES colegiosdb.public.asistencia(id_asistencia)
+    CONSTRAINT fk_asistencia_alu_curso FOREIGN KEY (id_alu_curso) REFERENCES colegiosdb.public.alu_curso(id_alu_curso)
 );
 
 CREATE TABLE IF NOT EXISTS colegiosdb.public.empleado (
