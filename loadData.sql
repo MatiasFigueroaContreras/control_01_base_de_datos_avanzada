@@ -115,7 +115,7 @@ SELECT e.id_empleado,
 FROM empleado e;
 
 INSERT INTO public.asistencia (cantidad, ano, id_alumno)
-SELECT cast(trunc(random()*100) as int),
+SELECT cast(trunc(random()*180+10) as int),
        '2019-01-01'::date + cast(trunc(random()*365) as int),
        a.id_alumno
 FROM alumno a;
@@ -127,3 +127,17 @@ FROM empleado e;
 
 INSERT INTO public.franja_horaria(cantidad_horas)
 SELECT 1 + cast(trunc(random()*5) as int);
+
+WITH alumno_list as
+        (SELECT al.id_alumno
+	 FROM alumno al
+	 ORDER BY random()
+	 )
+
+INSERT INTO public.alu_curso (id_alumno, id_curso, id_asistencia)
+SELECT al.id_alumno,
+	MOD(cast(trunc(random()*13) as int), 13) + 1,
+       a.id_asistencia
+FROM  alumno_list al,
+        asistencia a
+WHERE a.id_alumno = al.id_alumno;
