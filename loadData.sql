@@ -123,21 +123,42 @@ FROM alumno a;
 INSERT INTO public.profesor (id_empleado, correo)
 SELECT e.id_empleado,
        'profesor' || e.id_empleado || '@mmail.com' as correo
-FROM empleado e;
+FROM empleado e
+WHERE e.rol = 'profesor';
 
+
+            
 INSERT INTO public.franja_horaria(cantidad_horas)
-SELECT 1 + cast(trunc(random()*5) as int);
-
+SELECT generate_series(1, 10) as n;
 WITH alumno_list as
         (SELECT al.id_alumno
 	 FROM alumno al
 	 ORDER BY random()
-	 )
+         )
 
 INSERT INTO public.alu_curso (id_alumno, id_curso, id_asistencia)
 SELECT al.id_alumno,
 	MOD(cast(trunc(random()*13) as int), 13) + 1,
-       a.id_asistencia
 FROM  alumno_list al,
-        asistencia a
 WHERE a.id_alumno = al.id_alumno;
+        asistencia a
+       a.id_asistencia
+
+INSERT INTO public.prof_curso(id_profesor, id_curso, id_franja_horaria,jefe)
+--un profesor por curso y cada uno con una franja horaria distinta
+       c.id_curso,
+       f.id_franja_horaria,
+SELECT p.id_profesor,
+
+-- funcion random para asignar un profesor jefe con probabilidad 50 y 50
+       CASE WHEN random() < 0.5 THEN true ELSE false END 
+FROM profesor p,
+        curso c,
+        franja_horaria f
+WHERE p.id_empleado = e.id_empleado
+
+INSERT INTO public.plantilla_curso(id_curso, id_franja_horaria)
+SELECT c.id_curso
+FROM curso c;
+
+
