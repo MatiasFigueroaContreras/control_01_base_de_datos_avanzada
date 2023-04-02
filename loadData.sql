@@ -28,14 +28,14 @@ SELECT trunc((random()*19) + 1),
        'Colegio ' || generate_series(1, 100) as name;
 
 
--- Inserta 100 apoderados con parentenzcos random establecidos y su sexo asociado,
+-- Inserta 500 apoderados con parentenzcos random establecidos y su sexo asociado,
 --  ademas de una edad entre 20 y 60, con una comuna random.
 WITH parentezco_list as
         (SELECT '{padre, madre, abuelo, abuela, tio, tia}'::VARCHAR(50)[] parentezco),
      sexo_list as
         (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo),
      series as
-        (SELECT generate_series(1, 100) as n,
+        (SELECT generate_series(1, 500) as n,
                 MOD(cast(trunc(random()*6) as int), 6) + 1 as random)
 INSERT INTO public.apoderado (id_comuna, nombre, parentezco, sexo, edad)
 SELECT trunc((random()*19) + 1),
@@ -48,27 +48,23 @@ FROM parentezco_list,
      series;
 
 
--- Inserta 150 alumnos estableciendo relacion con un apoderado random,
---  y agregando la comuna y el colegio al que pertenece el apoderado
---  para que los datos tengan sentido, ademas de asignar un sexo y edad 
+-- Inserta 500 alumnos estableciendo relacion con un apoderado random,
+--  y agregando la comuna al que pertenece el apoderado para que
+--  los datos tengan sentido, ademas de asignar un sexo y edad 
 --  random, con un nombre del estilo Alumno X, con X entre  1-150.
 WITH apoderado_colegio_list as
-        (SELECT a.id_apoderado,
-                a.id_comuna,
-                c.id_colegio,
+        (SELECT DISTINCT id_apoderado,
+                id_comuna,
                 ROW_NUMBER() OVER (
                                    ORDER BY random()) as row_number
-         FROM apoderado a,
-              colegio c
-         WHERE c.id_comuna = a.id_comuna
-         ORDER BY random()
-         LIMIT 150),
+         FROM apoderado
+         ORDER BY row_number
+         LIMIT 500),
      sexo_list as
         (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo)
-INSERT INTO public.alumno (id_apoderado, id_comuna, id_colegio, edad, sexo, nombre)
+INSERT INTO public.alumno (id_apoderado, id_comuna, edad, sexo, nombre)
 SELECT acl.id_apoderado,
        acl.id_comuna,
-       acl.id_colegio,
        cast(trunc(random()*15 + 5) as int),
        sexo[MOD(cast(trunc(random()*2) as int), 2) + 1],
        'Alumno ' || acl.row_number as name
@@ -95,7 +91,7 @@ VALUES ('1ero Basico'),
 
 --
 WITH rol_list as
-        (SELECT '{profesor, auxiliar, secretario, coordinador,profesor,profesor}'::VARCHAR(50)[] rol),
+        (SELECT '{profesor, auxiliar, secretario, coordinador, profesor, profesor}'::VARCHAR(50)[] rol),
 
      colegio_list as
         (SELECT c.id_colegio,
@@ -132,10 +128,13 @@ FROM empleado e;
 
 
 -- Inserta cursos de manera aleatoria por cada alumno.
-INSERT INTO public.alu_curso (id_alumno, id_curso)
-SELECT id_alumno,
-                MOD(cast(trunc(random()*12) as int), 12) + 1
-FROM alumno;
+INSERT INTO public.alu_curso (id_alumno, id_curso, id_colegio)
+SELECT DISTINCT ON(a.id_alumno) a.id_alumno,
+        MOD(cast(trunc(random()*12) as int), 12) + 1,
+        c.id_colegio
+FROM alumno a, colegio c
+WHERE c.id_comuna = a.id_comuna
+ORDER BY a.id_alumno, random();
 
 -- Inserta nuevos cursos a cada estudiante teniendo en cuenta que paso
 --  de curso y teniendo como limite el curso mayor.
@@ -143,12 +142,15 @@ WITH n_alumnos as (SELECT COUNT(*) as count FROM alumno),
      alumnos_random as 
         (SELECT DISTINCT cast(trunc(random()*n_alumnos.count + 1) as int) as id_alumno
          FROM generate_series(1, 200), n_alumnos)
-INSERT INTO public.alu_curso (id_alumno, id_curso)
-SELECT ar.id_alumno, MAX(al.id_curso) + 1 as id_curso
-FROM alu_curso al, alumnos_random ar
-WHERE al.id_alumno = ar.id_alumno
-GROUP BY ar.id_alumno
-HAVING MAX(al.id_curso) + 1 <= 12;
+INSERT INTO public.alu_curso (id_alumno, id_curso, id_colegio)
+SELECT DISTINCT ON(ar.id_alumno) ar.id_alumno, 
+                MAX(ac.id_curso) + 1 as id_curso,
+                c.id_colegio
+FROM alu_curso ac, alumnos_random ar, colegio c, alumno a
+WHERE ac.id_alumno = ar.id_alumno AND ar.id_alumno = a.id_alumno AND a.id_comuna = c.id_comuna
+GROUP BY ar.id_alumno, c.id_colegio
+HAVING MAX(ac.id_curso) + 1 <= 12
+ORDER BY ar.id_alumno, random();
 
 
 -- Inserta a cada curso que tiene un alumno un anio random con asistencia 
@@ -232,51 +234,20 @@ SELECT c.id_curso
 FROM curso c;
 
 
-WITH apoderado_colegio_list as
-        (SELECT a.id_apoderado,
-                a.id_comuna,
-                c.id_colegio,
-                ROW_NUMBER() OVER (
-                                   ORDER BY random()) as row_number
-         FROM apoderado a,
-              colegio c
-         WHERE c.id_comuna = a.id_comuna
-         ORDER BY random()
-         LIMIT 150),
-     sexo_list as
-        (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo)
-     n_alumnos as
-        (SELECT count(*) FROM alumno)
-INSERT INTO public.alumno (id_apoderado, id_comuna, id_colegio, edad, sexo, nombre)
-SELECT acl.id_apoderado,
-       acl.id_comuna,
-       acl.id_colegio,
-       cast(trunc(random()*15 + 5) as int),
-       sexo[MOD(cast(trunc(random()*2) as int), 2) + 1],
-       'Alumno ' || acl.row_number + n_alumnos as name
-FROM apoderado_colegio_list acl, 
-     n_alumnos,
-     sexo_list;
-
-
 -- Insertar alumnos que asistieron todos los dias para probar la QUERY 5
 WITH apoderado_colegio_list as
-        (SELECT a.id_apoderado,
-                a.id_comuna,
-                c.id_colegio,
+        (SELECT id_apoderado,
+                id_comuna,
                 ROW_NUMBER() OVER (
                                    ORDER BY random()) as row_number
-         FROM apoderado a,
-              colegio c
-         WHERE c.id_comuna = a.id_comuna
+         FROM apoderado 
          ORDER BY random()
          LIMIT 50),
      sexo_list as
         (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo)
-INSERT INTO public.alumno (id_apoderado, id_comuna, id_colegio, edad, sexo, nombre)
+INSERT INTO public.alumno (id_apoderado, id_comuna, edad, sexo, nombre)
 SELECT acl.id_apoderado,
        acl.id_comuna,
-       acl.id_colegio,
        cast(trunc(random()*15 + 5) as int),
        sexo[MOD(cast(trunc(random()*2) as int), 2) + 1],
        'Alumno Asiste ' || acl.row_number as name
@@ -286,12 +257,15 @@ FROM apoderado_colegio_list acl,
 WITH n_alumnos as
         (SELECT count(*) as count
          FROM alumno)
-INSERT INTO public.alu_curso (id_alumno, id_curso)
-SELECT a.id_alumno,
-       MOD(cast(trunc(random()*12) as int), 12) + 1
+INSERT INTO public.alu_curso (id_alumno, id_curso, id_colegio)
+SELECT DISTINCT ON (a.id_alumno) a.id_alumno,
+       MOD(cast(trunc(random()*12) as int), 12) + 1 as id_curso,
+       c.id_colegio
 FROM alumno a,
-     n_alumnos
-WHERE a.id_alumno > n_alumnos.count - 50;
+     n_alumnos,
+     colegio c
+WHERE a.id_alumno > n_alumnos.count - 50 AND c.id_comuna = a.id_comuna
+ORDER BY a.id_alumno, random();
 -- Asignarle la asistencia completa a esos alumnos
 WITH n_alumnos as
         (SELECT count(*) as count

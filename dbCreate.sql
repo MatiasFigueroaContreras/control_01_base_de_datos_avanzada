@@ -65,23 +65,23 @@ CREATE TABLE IF NOT EXISTS colegiosdb.public.alumno (
     id_alumno SERIAL NOT NULL,
     id_apoderado int,
     id_comuna int,
-    id_colegio int,
     edad int,
     sexo varchar(50),
     nombre varchar(50),
     PRIMARY KEY (id_alumno),
     FOREIGN KEY (id_apoderado) REFERENCES colegiosdb.public.apoderado(id_apoderado),
-    FOREIGN KEY (id_comuna) REFERENCES colegiosdb.public.comuna(id_comuna),
-    FOREIGN KEY (id_colegio) REFERENCES colegiosdb.public.colegio(id_colegio)
+    FOREIGN KEY (id_comuna) REFERENCES colegiosdb.public.comuna(id_comuna)
 );
 
 CREATE TABLE IF NOT EXISTS colegiosdb.public.alu_curso (
     id_alu_curso SERIAL NOT NULL,
     id_alumno int,
     id_curso int,
+    id_colegio int,
     PRIMARY KEY (id_alu_curso),
     CONSTRAINT fk_alu_curso_alumno FOREIGN KEY (id_alumno) REFERENCES colegiosdb.public.alumno(id_alumno),
-    CONSTRAINT fk_alu_curso_curso FOREIGN KEY (id_curso) REFERENCES colegiosdb.public.curso(id_curso)
+    CONSTRAINT fk_alu_curso_curso FOREIGN KEY (id_curso) REFERENCES colegiosdb.public.curso(id_curso),
+    CONSTRAINT fk_alu_curso_colegio FOREIGN KEY (id_colegio) REFERENCES colegiosdb.public.colegio(id_colegio)
 );
 
 CREATE TABLE IF NOT EXISTS colegiosdb.public.asistencia (
