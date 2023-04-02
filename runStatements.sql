@@ -52,6 +52,20 @@ FROM(SELECT DISTINCT ON (t1.cantidad_alumnos)
 GROUP BY t2.anio
 ORDER BY t2.anio;
 
+--Query 5
+--Identificar al alumno que no ha faltado nunca por curso
+SELECT al.nombre as nombre,
+       cu.nombre as curso
+FROM curso cu,
+     alumno al,
+     alu_curso alcu,
+     asistencia asis
+WHERE alcu.id_alumno = al.id_alumno
+      and alcu.id_curso = cu.id_curso
+      and alcu.id_alu_curso = asis.id_alu_curso
+GROUP BY al.nombre,
+         cu.nombre
+HAVING SUM(asis.max_asistencia) = SUM(asis.cantidad);
 
 --Query 8
 -- listado alumnos por curso donde el apoderado no es su padre o madre
@@ -63,7 +77,28 @@ WHERE a.id_alumno = ac.id_alumno and ap.id_apoderado = a.id_apoderado and ac.id_
 --Query 9
 -- colegio con mayor promedio de asistencia el año 2019, identificando la comuna
 SELECT co.nombre as colegio, c.nombre as comuna, AVG(asi.cantidad) as promedio_asistencia
-FROM colegio co, comuna c, asistencia asi, alu_curso ac, alumno a
-WHERE co.id_comuna = c.id_comuna and a.id_colegio = co.id_colegio   and ac.id_alumno = a.id_alumno and asi.anio = 2019 and asi.id_alu_curso = ac.id_alu_curso
+FROM colegio co, comuna c, asistencia asi, alu_curso ac
+WHERE co.id_comuna = c.id_comuna and ac.id_colegio = co.id_colegio  and asi.anio = 2019 and asi.id_alu_curso = ac.id_alu_curso
 GROUP BY co.nombre, c.nombre
 ORDER BY promedio_asistencia desc;
+
+
+--Query 10
+-- Lista de colegios con mayor numero de alumnos por anio
+WITH alu_cursos_por_anio as
+      ( SELECT DISTINCT asis.id_alu_curso,
+                        asis.anio,
+                        ac.id_colegio
+       FROM asistencia asis,
+            alu_curso ac
+       WHERE ac.id_alu_curso = asis.id_alu_curso )
+SELECT c.nombre,
+       ac.anio,
+       COUNT(ac.id_alu_curso) as num_alumnos
+FROM alu_cursos_por_anio ac,
+     colegio c
+WHERE ac.id_colegio = c.id_colegio
+GROUP BY c.nombre,
+         ac.anio
+ORDER BY ac.anio,
+         num_alumnos DESC;
