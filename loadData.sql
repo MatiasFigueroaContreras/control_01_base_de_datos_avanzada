@@ -126,12 +126,25 @@ SELECT e.id_empleado,
 FROM empleado e;
 
 
--- Inserta maximo 4 cursos distintos de manera aleatoria cursados
---  por cada alumno.
+-- Inserta cursos de manera aleatoria por cada alumno.
 INSERT INTO public.alu_curso (id_alumno, id_curso)
-SELECT DISTINCT al.id_alumno,
+SELECT id_alumno,
                 MOD(cast(trunc(random()*12) as int), 12) + 1
-FROM alumno al, generate_series(1, 4);
+FROM alumno;
+
+-- Inserta nuevos cursos a cada estudiante teniendo en cuenta que paso
+--  de curso y teniendo como limite el curso mayor.
+WITH n_alumnos as (SELECT COUNT(*) as count FROM alumno),
+     alumnos_random as 
+        (SELECT DISTINCT cast(trunc(random()*n_alumnos.count + 1) as int) as id_alumno
+         FROM generate_series(1, 200), n_alumnos)
+INSERT INTO public.alu_curso (id_alumno, id_curso)
+SELECT ar.id_alumno, MAX(al.id_curso) + 1 as id_curso
+FROM alu_curso al, alumnos_random ar
+WHERE al.id_alumno = ar.id_alumno
+GROUP BY ar.id_alumno
+HAVING MAX(al.id_curso) + 1 <= 12;
+
 
 -- Inserta a cada curso que tiene un alumno un anio random con asistencia 
 --  random entre los meses 3-12 de ese anio, ademas se ingresa la asistencia 
@@ -155,7 +168,7 @@ WITH fechas as
          ORDER BY anio ASC, mes ASC),
 -- Se asigna un anio random a cada curso del alumno
      alu_curso_anio_random as
-        (SELECT id_alu_curso,
+        (SELECT DISTINCT id_alu_curso,
                 cast(trunc(random()*3 + 2019) as int) as anio_random
          FROM alu_curso)
 INSERT INTO public.asistencia (cantidad, mes, anio, max_asistencia, id_alu_curso)
@@ -167,7 +180,7 @@ SELECT cast(trunc(random()*(f.max_dias - 1) + 1) as int) as cantidad,
 FROM fechas f,
      alu_curso_anio_random as al
 WHERE f.anio = al.anio_random
-ORDER BY f.anio ASC,
+ORDER BY f.anio ASC, 
          al.id_alu_curso ASC,
          f.mes ASC;
 
@@ -212,3 +225,102 @@ WHERE
 INSERT INTO public.plantilla_curso(id_curso)
 SELECT c.id_curso
 FROM curso c;
+
+
+WITH apoderado_colegio_list as
+        (SELECT a.id_apoderado,
+                a.id_comuna,
+                c.id_colegio,
+                ROW_NUMBER() OVER (
+                                   ORDER BY random()) as row_number
+         FROM apoderado a,
+              colegio c
+         WHERE c.id_comuna = a.id_comuna
+         ORDER BY random()
+         LIMIT 150),
+     sexo_list as
+        (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo)
+     n_alumnos as
+        (SELECT count(*) FROM alumno)
+INSERT INTO public.alumno (id_apoderado, id_comuna, id_colegio, edad, sexo, nombre)
+SELECT acl.id_apoderado,
+       acl.id_comuna,
+       acl.id_colegio,
+       cast(trunc(random()*15 + 5) as int),
+       sexo[MOD(cast(trunc(random()*2) as int), 2) + 1],
+       'Alumno ' || acl.row_number + n_alumnos as name
+FROM apoderado_colegio_list acl, 
+     n_alumnos,
+     sexo_list;
+
+
+-- Insertar alumnos que asistieron todos los dias para probar la QUERY 5
+WITH apoderado_colegio_list as
+        (SELECT a.id_apoderado,
+                a.id_comuna,
+                c.id_colegio,
+                ROW_NUMBER() OVER (
+                                   ORDER BY random()) as row_number
+         FROM apoderado a,
+              colegio c
+         WHERE c.id_comuna = a.id_comuna
+         ORDER BY random()
+         LIMIT 50),
+     sexo_list as
+        (SELECT '{mujer, hombre}'::VARCHAR(50)[] sexo)
+INSERT INTO public.alumno (id_apoderado, id_comuna, id_colegio, edad, sexo, nombre)
+SELECT acl.id_apoderado,
+       acl.id_comuna,
+       acl.id_colegio,
+       cast(trunc(random()*15 + 5) as int),
+       sexo[MOD(cast(trunc(random()*2) as int), 2) + 1],
+       'Alumno Asiste ' || acl.row_number as name
+FROM apoderado_colegio_list acl,
+     sexo_list;
+-- Asignarle cursos a esos alumnos
+WITH n_alumnos as
+        (SELECT count(*) as count
+         FROM alumno)
+INSERT INTO public.alu_curso (id_alumno, id_curso)
+SELECT a.id_alumno,
+       MOD(cast(trunc(random()*12) as int), 12) + 1
+FROM alumno a,
+     n_alumnos
+WHERE a.id_alumno > n_alumnos.count - 50;
+-- Asignarle la asistencia completa a esos alumnos
+WITH n_alumnos as
+        (SELECT count(*) as count
+         FROM alumno),
+     fechas as
+        (SELECT extract('YEAR'
+                        FROM dates) AS anio,
+                extract('MONTH'
+                        FROM dates) AS mes,
+                COUNT(extract('ISODOW'
+                              FROM dates)) AS max_dias
+         FROM generate_series(timestamp '2019-03-01', timestamp '2023-01-01' - interval '1 day' , interval '1 day') dates
+         WHERE extract('ISODOW'
+                       FROM dates) < 6
+                 AND extract('MONTH'
+                             FROM dates) >= 3
+         GROUP BY anio,
+                  mes
+         ORDER BY anio ASC, mes ASC),
+     alu_curso_anio_random as
+        (SELECT DISTINCT id_alu_curso,
+                         cast(trunc(random()*3 + 2019) as int) as anio_random
+         FROM alu_curso al,
+              n_alumnos
+         WHERE al.id_alumno > n_alumnos.count - 50)
+INSERT INTO public.asistencia (cantidad, mes, anio, max_asistencia, id_alu_curso)
+SELECT f.max_dias as cantidad,
+       f.mes as mes,
+       f.anio as anio,
+       f.max_dias as max_asistencia,
+       al.id_alu_curso
+FROM fechas f,
+     alu_curso_anio_random as al
+WHERE f.anio = al.anio_random
+ORDER BY f.anio ASC,
+         al.id_alu_curso ASC,
+         f.mes ASC;
