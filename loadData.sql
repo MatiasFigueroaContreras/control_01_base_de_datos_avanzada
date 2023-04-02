@@ -109,9 +109,21 @@ FROM   rol_list,
         sexo_list,
         series;
 
-
-
 INSERT INTO public.sueldo (id_empleado, cantidad)
 SELECT e.id_empleado,
        cast(trunc(random()*600000 + 500000) as int)
 FROM empleado e;
+
+INSERT INTO public.asistencia (cantidad, ano, id_alumno)
+SELECT cast(trunc(random()*100) as int),
+       '2019-01-01'::date + cast(trunc(random()*365) as int),
+       a.id_alumno
+FROM alumno a;
+
+INSERT INTO public.profesor (id_empleado, correo)
+SELECT e.id_empleado,
+       'profesor' || e.id_empleado || '@mmail.com' as correo
+FROM empleado e;
+
+INSERT INTO public.franja_horaria(cantidad_horas)
+SELECT 1 + cast(trunc(random()*5) as int);

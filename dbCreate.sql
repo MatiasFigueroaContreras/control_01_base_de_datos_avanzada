@@ -79,7 +79,9 @@ CREATE TABLE IF NOT EXISTS colegiosdb.public.asistencia (
     id_asistencia SERIAL NOT NULL,
     cantidad int,
     ano date,
-    PRIMARY KEY (id_asistencia)
+    id_alumno int,
+    PRIMARY KEY (id_asistencia),
+    CONSTRAINT fk_alu_curso_alumno FOREIGN KEY (id_alumno) REFERENCES colegiosdb.public.alumno(id_alumno)
 );
 
 CREATE TABLE IF NOT EXISTS colegiosdb.public.alu_curso (
