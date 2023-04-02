@@ -15,10 +15,20 @@ WHERE e.id_empleado = p.id_empleado and s.id_empleado = e.id_empleado and pc.id_
 
 --Query 2
 --Lista de alumnos con mas inasistencias por mes por curso el año 2019.
--- 22 ya que se descuentan los fines de semana.
-SELECT a.nombre, 22-asi.cantidad as inasistencias, asi.mes, asi.anio
-FROM alumno a, asistencia asi, alu_curso ac
-WHERE a.id_alumno = ac.id_alumno and ac.id_asistencia = asi.id_asistencia and asi.anio = 2019;
+SELECT cu.nombre as curso, asi.mes, MAX(asi.cantidad) AS inasistencias, al.nombre
+FROM curso cu, alu_curso ac, asistencia asi, alumno al
+WHERE asi.anio = 2019
+	AND cu.id_curso = ac.id_curso
+	AND ac.id_alu_curso = asi.id_alu_curso
+	AND al.id_alumno = ac.id_alumno
+	AND (asi.cantidad, asi.mes, asi.anio) 
+      IN (SELECT MAX(a2.cantidad), a2.mes, a2.anio
+		FROM asistencia a2, alu_curso ac2 
+		WHERE a2.id_alu_curso = ac2.id_alu_curso 
+                  AND ac2.id_curso = cu.id_curso
+		GROUP BY a2.mes, a2.anio)
+	GROUP BY cu.nombre, asi.mes, al.nombre
+	ORDER BY cu.nombre, asi.mes;
 
 --Query 3
 --Lista de empleados con su rol, sueldo y comuna de residencia ordenado por comuna y sueldo.
