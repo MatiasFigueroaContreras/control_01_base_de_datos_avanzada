@@ -67,6 +67,22 @@ GROUP BY al.nombre,
          cu.nombre
 HAVING SUM(asis.max_asistencia) = SUM(asis.cantidad);
 
+--Query 6
+-- ID del profesor con más horas de clases y su respectivo sueldo
+SELECT prof.id_profesor, fr.cantidad_horas, s.cantidad as sueldo
+FROM franja_horaria fr, prof_curso profc, profesor prof, sueldo s, empleado emp
+WHERE fr.id_franja_horaria=profc.id_franja_horaria AND profc.id_profesor=prof.id_profesor AND prof.id_empleado=emp.id_empleado AND emp.id_empleado=s.id_empleado
+ORDER BY fr.cantidad_horas DESC, s.cantidad DESC
+LIMIT 1
+
+--Query 7
+-- ID del profesor con menos horas de clases y su respectivo sueldo
+SELECT prof.id_profesor, fr.cantidad_horas, s.cantidad as sueldo
+FROM franja_horaria fr, prof_curso profc, profesor prof, sueldo s, empleado emp
+WHERE fr.id_franja_horaria=profc.id_franja_horaria AND profc.id_profesor=prof.id_profesor AND prof.id_empleado=emp.id_empleado AND emp.id_empleado=s.id_empleado
+ORDER BY fr.cantidad_horas ASC, s.cantidad ASC
+LIMIT 1
+
 --Query 8
 -- listado alumnos por curso donde el apoderado no es su padre o madre
 SELECT a.nombre, cu.nombre as curso
