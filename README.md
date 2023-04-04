@@ -1,8 +1,8 @@
 # Control 01 Base de Datos Avanzadas | Equipo 02 
 
-Intengrantes:
+Integrantes:
 
-* Cristobal Marchant
+* Cristóbal Marchant
 * Juan Ramirez
 * Samoth Godoy
 * Diego Oliva
@@ -10,5 +10,4 @@ Intengrantes:
 
 
 Link Repositorio GitHub:
-
 https://github.com/MatiasFigueroaContreras/control_01_base_de_datos_avanzada

@@ -15,20 +15,22 @@ WHERE e.id_empleado = p.id_empleado and s.id_empleado = e.id_empleado and pc.id_
 
 --Query 2
 --Lista de alumnos con mas inasistencias por mes por curso el año 2019.
-SELECT cu.nombre as curso, asi.mes, MAX(asi.cantidad) AS inasistencias, al.nombre
-FROM curso cu, alu_curso ac, asistencia asi, alumno al
+SELECT cu.nombre as curso, asi.mes, MAX(asi.max_asistencia-asi.cantidad) AS inasistencias, al.nombre
+FROM curso cu, alu_curso ac, alumno al, asistencia asi, (SELECT asi2.mes as mes, asi2.anio, ac2.id_curso, MAX(asi2.cantidad) AS cantidad_max
+                                                            FROM asistencia asi2, alu_curso ac2
+                                                            WHERE asi2.id_alu_curso = ac2.id_alu_curso
+                                                            AND asi2.anio = 2019
+                                                            GROUP BY asi2.mes, asi2.anio, ac2.id_curso) max_asi
 WHERE asi.anio = 2019
-	AND cu.id_curso = ac.id_curso
-	AND ac.id_alu_curso = asi.id_alu_curso
-	AND al.id_alumno = ac.id_alumno
-	AND (asi.cantidad, asi.mes, asi.anio) 
-      IN (SELECT MAX(a2.cantidad), a2.mes, a2.anio
-		FROM asistencia a2, alu_curso ac2 
-		WHERE a2.id_alu_curso = ac2.id_alu_curso 
-                  AND ac2.id_curso = cu.id_curso
-		GROUP BY a2.mes, a2.anio)
-	GROUP BY cu.nombre, asi.mes, al.nombre
-	ORDER BY cu.nombre, asi.mes;
+      AND cu.id_curso = ac.id_curso
+      AND ac.id_alu_curso = asi.id_alu_curso
+      AND al.id_alumno = ac.id_alumno
+      AND max_asi.mes = asi.mes
+      AND max_asi.anio = asi.anio
+      AND max_asi.id_curso = cu.id_curso
+      AND max_asi.cantidad_max = asi.cantidad
+GROUP BY cu.nombre, asi.mes, al.nombre
+ORDER BY cu.nombre, asi.mes;
 
 --Query 3
 --Lista de empleados con su rol, sueldo y comuna de residencia ordenado por comuna y sueldo.
