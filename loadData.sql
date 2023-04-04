@@ -89,7 +89,7 @@ VALUES ('1ero Basico'),
 
 
 
---
+-- Inserta empleados dependiendo del colegio, con un rol random, y un sexo random.
 WITH rol_list as
         (SELECT '{profesor, auxiliar, secretario, coordinador, profesor, profesor}'::VARCHAR(50)[] rol),
 
@@ -107,8 +107,6 @@ WITH rol_list as
      series as
         (SELECT generate_series(1, 10) as n,
                 MOD(cast(trunc(random()*6) as int), 6) + 1 as random)
-
-
 INSERT INTO public.empleado (id_colegio, nombre, rol, sexo)
 SELECT cl.id_colegio,
        'Empleado ' || cl.row_number || cl.id_colegio as name,
@@ -120,7 +118,7 @@ FROM rol_list,
      series;
 
 
---
+--  Inserta sueldos random para cada empleado teniendo de base 500.000
 INSERT INTO public.sueldo (id_empleado, cantidad)
 SELECT e.id_empleado,
        cast(trunc(random()*600000 + 500000) as int)
@@ -192,7 +190,7 @@ ORDER BY f.anio ASC,
          f.mes ASC;
 
 
---
+-- Se  insertan profesores y se les asigna un correo random.
 INSERT INTO public.profesor (id_empleado, correo)
 SELECT e.id_empleado,
        'profesor' || e.id_empleado || '@mmail.com' as correo
@@ -200,12 +198,12 @@ FROM empleado e
 WHERE e.rol = 'profesor';
 
 
--- 
+--  Se insertan franjas horarias  con cantidad de horas de 2 a 6.
 INSERT INTO public.franja_horaria(cantidad_horas)
 SELECT generate_series(2, 6) as n;
 
 
---
+
 --un curso puede tener maximo 2 profesores y un profesor puede trabajar en 1 colegio.
 INSERT INTO public.prof_curso(id_profesor, id_curso, id_franja_horaria, jefe) 
 SELECT p.id_profesor,
@@ -228,7 +226,7 @@ WHERE
 
 
 
---
+-- Se le asigna una plantilla de curso a cada curso.
 INSERT INTO public.plantilla_curso(id_curso)
 SELECT c.id_curso
 FROM curso c;
@@ -290,7 +288,7 @@ WITH n_alumnos as
                          cast(trunc(random()*3 + 2019) as int) as anio_random
          FROM alu_curso al,
               n_alumnos
-         WHERE al.id_alumno > n_alumnos.count - 50)
+         WHERE al.id_alumno > n_alumnos.count - 50)       
 INSERT INTO public.asistencia (cantidad, mes, anio, max_asistencia, id_alu_curso)
 SELECT f.max_dias as cantidad,
        f.mes as mes,
