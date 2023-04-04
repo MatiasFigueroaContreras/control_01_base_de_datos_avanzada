@@ -15,12 +15,9 @@ COMMENT ON DATABASE colegiosdb
 	IS 'control 1 base de datos';
 
 --- Escribir el siguiente comando en el SQL Shell, 
----  para utilizar la base de datos creada
+---  para utilizar la base de datos creada:
 ---  \c colegiosdb
-
--- Tablas de la base de datos 
--- se ponen en el query 
--- lo de arriba no  
+--- O ingresar una query en pgAdmin
 
 CREATE TABLE IF NOT EXISTS colegiosdb.public.comuna (
     id_comuna SERIAL NOT NULL,
